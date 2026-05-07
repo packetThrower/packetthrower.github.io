@@ -29,7 +29,7 @@ const year = new Date().getFullYear();
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" type="image/svg+xml" href="/icon.svg" />
 		<meta name="generator" content={Astro.generator} />
 		<title>packetThrower &mdash; tools for the people running the network</title>
 		<meta
@@ -48,6 +48,7 @@ const year = new Date().getFullYear();
 		<main>
 			<section class="hero" aria-labelledby="hero-title">
 				<div class="hero-inner">
+					<img class="hero-mark" src="/icon.svg" alt="" width="120" height="120" loading="eager" decoding="sync" />
 					<h1 id="hero-title">packetThrower</h1>
 					<p class="tagline">Tools for the people running the network.</p>
 				</div>
@@ -233,6 +234,13 @@ const year = new Date().getFullYear();
 		position: relative;
 		z-index: 1;
 		max-width: 42rem;
+	}
+
+	.hero-mark {
+		display: block;
+		margin: 0 auto 1.5rem;
+		border-radius: 22%; /* echoes the squircle but stays subtle */
+		filter: drop-shadow(0 18px 40px rgba(4, 8, 14, 0.55));
 	}
 
 	.hero h1 {

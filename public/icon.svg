@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  packetThrower icon.
+
+  Family DNA: same navy squircle and amber palette as PortFinder (RJ-45)
+  and Baudrun (DB-9). But where those two depict a connector framed in a
+  metallic bezel, this one drops the chassis entirely — the packet IS the
+  icon. A single amber data block on the navy ground with field structure
+  pulled from a typical packet diagram (preamble / src / dst / type /
+  payload / CRC) and a side-strip suggesting box thickness.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <!-- Navy ground — same gradient as PortFinder for family consistency. -->
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2e4368"/>
+      <stop offset="100%" stop-color="#162237"/>
+    </linearGradient>
+
+    <!-- Amber packet face: top-bright, bottom-amber. Reads as a raised surface. -->
+    <linearGradient id="packetFace" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff3d2"/>
+      <stop offset="22%" stop-color="#f8d79a"/>
+      <stop offset="60%" stop-color="#f0c060"/>
+      <stop offset="100%" stop-color="#a87420"/>
+    </linearGradient>
+
+    <!-- Right-side strip showing the packet's thickness (the 3D cue). -->
+    <linearGradient id="packetEdge" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#a87420"/>
+      <stop offset="100%" stop-color="#5a3a10"/>
+    </linearGradient>
+
+    <!-- Top-face strip (subtle parallelogram suggesting the box has a top). -->
+    <linearGradient id="packetTop" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff5d8"/>
+      <stop offset="100%" stop-color="#f8d79a"/>
+    </linearGradient>
+
+    <!-- Drop shadow under the packet — substantial, sells the "thrown / hovering" feel. -->
+    <filter id="packet-shadow" x="-15%" y="-15%" width="130%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="22"/>
+      <feOffset dy="32"/>
+      <feFlood flood-color="#000" flood-opacity="0.6"/>
+      <feComposite in2="SourceAlpha" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Squircle background -->
+  <rect x="0" y="0" width="1024" height="1024" rx="225" ry="225" fill="url(#bg)"/>
+
+  <!--
+    Single packet, centered. 700 wide × 300 tall ≈ 68% × 29% of canvas,
+    leaving a clear navy frame on every side. The face is divided into
+    six unequal fields (small / medium / medium / small / large / small)
+    that mimic header + payload + trailer in a real packet diagram.
+  -->
+  <g filter="url(#packet-shadow)">
+    <!-- Top face (slight parallelogram offset up-right): the lid of the box. -->
+    <path d="M 178 364 L 854 364 L 866 348 L 190 348 Z" fill="url(#packetTop)"/>
+
+    <!-- Right face: thickness panel offset down. -->
+    <path d="M 854 364 L 866 348 L 866 644 L 854 660 Z" fill="url(#packetEdge)"/>
+
+    <!-- Front face — the main packet body. -->
+    <rect x="178" y="364" width="676" height="300" rx="14" ry="14" fill="url(#packetFace)"/>
+
+    <!--
+      Field dividers. Widths sum to 676:
+        preamble 44, src 132, dst 132, type 56, payload 252, CRC 60.
+      Mimics a typical L2 frame layout — small headers + variable payload + CRC.
+    -->
+    <g fill="#5a3a10" opacity="0.6">
+      <rect x="222" y="364" width="3.5" height="300"/>
+      <rect x="354" y="364" width="3.5" height="300"/>
+      <rect x="486" y="364" width="3.5" height="300"/>
+      <rect x="542" y="364" width="3.5" height="300"/>
+      <rect x="794" y="364" width="3.5" height="300"/>
+    </g>
+
+    <!--
+      Subtle alternating tint on the small "header" fields so they read
+      as distinct from the wide payload field. Very low opacity.
+    -->
+    <g fill="#a87420" opacity="0.22">
+      <rect x="178" y="364" width="44" height="300"/>
+      <rect x="358" y="364" width="128" height="300"/>
+      <rect x="490" y="364" width="52" height="300"/>
+      <rect x="798" y="364" width="56" height="300"/>
+    </g>
+
+    <!-- Two thin horizontal "byte row" lines across the payload — mimics the
+         row-wrapped data shown in protocol diagrams. -->
+    <g fill="#5a3a10" opacity="0.32">
+      <rect x="546" y="445" width="244" height="2"/>
+      <rect x="546" y="585" width="244" height="2"/>
+    </g>
+
+    <!-- Top edge highlight (family signature, also reads as the lit top of the box). -->
+    <rect x="178" y="364" width="676" height="8" rx="4" fill="#fff5d8" opacity="0.65"/>
+
+    <!-- Bottom edge dark band (the underside, away from the light). -->
+    <rect x="178" y="656" width="676" height="8" rx="4" fill="#000" opacity="0.32"/>
+  </g>
+</svg>
