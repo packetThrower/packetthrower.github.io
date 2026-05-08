@@ -9,12 +9,17 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.2",
     "@fontsource-variable/fraunces": "^5.2.9",
     "@fontsource-variable/ibm-plex-sans": "^5.2.8",
     "astro": "^6.2.2"
+  },
+  "devDependencies": {
+    "sharp": "^0.34.5",
+    "to-ico": "^1.1.5"
   }
 }
