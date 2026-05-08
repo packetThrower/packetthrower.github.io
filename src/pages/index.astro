@@ -29,20 +29,39 @@ const year = new Date().getFullYear();
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<link rel="icon" type="image/svg+xml" href="/icon.svg" />
 		<meta name="generator" content={Astro.generator} />
 		<title>packetThrower &mdash; tools for the people running the network</title>
 		<meta
 			name="description"
 			content="Open-source desktop tools for network engineers. PortFinder for switch port discovery, Baudrun for serial console sessions."
 		/>
+
+		<!-- Icon pack — generated via `pnpm icons` from public/icon.svg. -->
+		<link rel="icon" type="image/svg+xml" href="/icon.svg" />
+		<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+		<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+		<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+		<link rel="manifest" href="/site.webmanifest" />
+		<meta name="theme-color" content="#162237" />
+
+		<!-- Open Graph + Twitter -->
 		<meta property="og:title" content="packetThrower" />
 		<meta
 			property="og:description"
-			content="Open-source desktop tools for network engineers."
+			content="Open-source desktop tools for network engineers. PortFinder for switch port discovery, Baudrun for serial console sessions."
 		/>
 		<meta property="og:type" content="website" />
 		<meta property="og:url" content="https://packetthrower.github.io/" />
+		<meta property="og:image" content="https://packetthrower.github.io/og-image.png" />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content="packetThrower" />
+		<meta
+			name="twitter:description"
+			content="Open-source desktop tools for network engineers."
+		/>
+		<meta name="twitter:image" content="https://packetthrower.github.io/og-image.png" />
 	</head>
 	<body>
 		<main>
