@@ -1,7 +1,8 @@
 # packetthrower.github.io
 
 Landing page at <https://packetthrower.github.io/> — a portal that
-links to [Baudrun](https://github.com/packetThrower/Baudrun),
+links to [zorite](https://github.com/packetThrower/zorite),
+[Baudrun](https://github.com/packetThrower/Baudrun),
 [PortFinder](https://github.com/packetThrower/PortFinder), and
 [etch341](https://github.com/packetThrower/etch341). Single-page
 static site built with [Astro](https://astro.build/).
