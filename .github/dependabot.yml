@@ -1,0 +1,32 @@
+version: 2
+
+# Dependency-update schedule for the two ecosystems this repo uses: the Astro
+# static site at the repo root (Node packages via pnpm-lock.yaml) and the
+# GitHub Actions in the deploy workflow. Paths are explicit so renaming a
+# directory surfaces as a Dependabot error instead of silently dropping
+# coverage.
+
+updates:
+  # Astro site at the repo root. Dependabot's `npm` ecosystem reads
+  # pnpm-lock.yaml the same way it reads package-lock.json.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      # One PR for the routine patch/minor sweep instead of a dozen; majors
+      # still come through individually so they get a proper look.
+      npm-minor:
+        update-types: ["minor", "patch"]
+
+  # GitHub Actions in .github/workflows/. Keeps action versions current and
+  # surfaces upstream security fixes.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      actions:
+        patterns:
+          - "*"
