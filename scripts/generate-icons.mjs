@@ -16,7 +16,6 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
-import toIco from 'to-ico';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '..');
@@ -39,10 +38,35 @@ const writePng = async (size, name) => {
 	console.log(`  ${name.padEnd(24)} ${size}×${size}`);
 };
 
+/*
+ * Pack PNGs into an ICO container (PNG-compressed entries, supported by every
+ * browser and by Windows since Vista): 6-byte header, one 16-byte directory
+ * entry per image, then the PNG bytes back to back.
+ */
+const packIco = (sizes, pngs) => {
+	const header = Buffer.alloc(6);
+	header.writeUInt16LE(0, 0); // reserved
+	header.writeUInt16LE(1, 2); // type: icon
+	header.writeUInt16LE(pngs.length, 4);
+	let offset = 6 + 16 * pngs.length;
+	const entries = pngs.map((png, i) => {
+		const e = Buffer.alloc(16);
+		e.writeUInt8(sizes[i] % 256, 0); // width (0 means 256)
+		e.writeUInt8(sizes[i] % 256, 1); // height
+		e.writeUInt16LE(1, 4); // colour planes
+		e.writeUInt16LE(32, 6); // bits per pixel
+		e.writeUInt32LE(png.length, 8);
+		e.writeUInt32LE(offset, 12);
+		offset += png.length;
+		return e;
+	});
+	return Buffer.concat([header, ...entries, ...pngs]);
+};
+
 const writeIco = async () => {
 	const sizes = [16, 32, 48];
 	const buffers = await Promise.all(sizes.map(renderPng));
-	const ico = await toIco(buffers);
+	const ico = packIco(sizes, buffers);
 	const out = resolve(publicDir, 'favicon.ico');
 	writeFileSync(out, ico);
 	console.log(`  ${'favicon.ico'.padEnd(24)} ${sizes.map((s) => `${s}×${s}`).join(', ')}`);

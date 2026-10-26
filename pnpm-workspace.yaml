@@ -1,3 +1,15 @@
 allowBuilds:
   esbuild: true
   sharp: true
+
+# Transitive-dep overrides for CVE remediation (pnpm 11 reads overrides
+# here, not from package.json). Each floors a transitive dep above its
+# vulnerable range so the direct deps don't have to release first.
+overrides:
+  # js-yaml <4.3.1: quadratic-complexity DoS in merge-key / !!omap
+  # handling. Capped below 5 — js-yaml 5 drops the default export astro
+  # imports.
+  js-yaml: ">=4.3.1 <5"
+  # esbuild >=0.27.3 <0.28.1: arbitrary file read while its dev server
+  # runs on Windows (GHSA-g7r4-m6w7-qqqr). Transitive via astro -> vite.
+  esbuild: ">=0.28.1"
