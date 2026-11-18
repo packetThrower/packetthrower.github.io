@@ -1,463 +1,223 @@
 ---
-import '@fontsource-variable/fraunces';
-import '@fontsource-variable/ibm-plex-sans';
+import Layout from '@packetthrower/site-theme/components/Layout.astro';
+import InstallTabs from '@packetthrower/site-theme/components/InstallTabs.astro';
+import { APPS, GITHUB, HUB, iconFor } from '@packetthrower/site-theme';
 
-const projects = [
-	{
-		name: 'Zorite',
-		icon: '/zorite.svg',
-		tagline: 'A local-first daily journal.',
-		body: 'Linked notes, full-text search, PDF annotation, and freeform whiteboards. macOS, Windows, and Linux.',
-		docs: 'https://packetthrower.github.io/zorite/',
-		repo: 'https://github.com/packetThrower/zorite',
-	},
-	{
-		name: 'Baudrun',
-		icon: '/baudrun.svg',
-		tagline: 'A serial terminal for network gear.',
-		body: 'Console sessions for switches, routers, and firewalls. Replaces the screen / minicom / putty dance.',
-		docs: 'https://packetthrower.github.io/Baudrun/',
-		repo: 'https://github.com/packetThrower/Baudrun',
-	},
-	{
-		name: 'PortFinder',
-		icon: '/portfinder.svg',
-		tagline: 'Plug a laptop into a switch, see what port you’re on.',
-		body: 'CDP, LLDP, and MNDP discovery on macOS, Windows, and Linux. GUI + headless CLI in one binary.',
-		docs: 'https://packetthrower.github.io/PortFinder/',
-		repo: 'https://github.com/packetThrower/PortFinder',
-	},
-	{
-		name: 'etch341',
-		icon: '/etch341.svg',
-		tagline: 'A flash programmer for the CH341A.',
-		body: 'Read, erase, write, and verify SPI NOR and I²C EEPROM chips against a 58-chip database. macOS, Windows, and Linux from one binary.',
-		docs: 'https://packetthrower.github.io/etch341/',
-		repo: 'https://github.com/packetThrower/etch341',
-	},
+const description =
+	'Open-source desktop tools for network engineers and tinkerers: Baudrun, PortFinder, etch341 and Zorite. macOS, Windows and Linux.';
+
+// Latest release of each app, fetched at build time (deploy.yml rebuilds daily).
+// A failed fetch drops that app's row and version badge rather than failing the build.
+const headers = process.env.GITHUB_TOKEN ? { authorization: `Bearer ${process.env.GITHUB_TOKEN}` } : {};
+/** First prose sentence, or the first bold bullet, of a release body. */
+const summarize = (body = '') => {
+	const block = body.replace(/\r/g, '').split(/\n\s*\n/).map((b) => b.trim()).find((b) => b && !b.startsWith('#')) ?? '';
+	const bold = block.match(/^- \*\*(.+?)\*\*/);
+	const text = bold ? bold[1] : block.replace(/\s+/g, ' ').split(/(?<=\.)\s/)[0];
+	return text.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1').replace(/[*`]/g, '').replace(/\.$/, '');
+};
+const releases = (
+	await Promise.all(
+		APPS.map(async (app) => {
+			try {
+				const res = await fetch(`https://api.github.com/repos/packetThrower/${app.repo}/releases/latest`, { headers });
+				if (!res.ok) return null;
+				const r = await res.json();
+				return { app, version: r.tag_name.replace(/^v/, ''), date: r.published_at.slice(0, 10), url: r.html_url, summary: summarize(r.body) };
+			} catch {
+				return null;
+			}
+		}),
+	)
+)
+	.filter((r) => r !== null)
+	.sort((a, b) => b.date.localeCompare(a.date));
+const versionOf = (app) => releases.find((r) => r.app === app)?.version;
+const newest = releases[0];
+
+const groups = [
+	{ label: 'Network & hardware', apps: APPS.filter((a) => a.group === 'network') },
+	{ label: 'Notes', apps: APPS.filter((a) => a.group === 'notes') },
 ];
 
-const year = new Date().getFullYear();
+const crates = [
+	['zorite-editor', 'Multi-line Markdown editor for GPUI with live preview, tables, images and math.'],
+	['zorite-markdown', 'Markdown reading view for GPUI: links, wiki-links, tables, alerts, right-to-left text.'],
+	['gpui-pdf', 'PDF viewer for GPUI in pure Rust: text search, highlights, fillable forms.'],
+	['gpui-whiteboard', 'Infinite whiteboard canvas: shapes, arrows, freehand drawing, text, images.'],
+	['ratex-gpui', 'LaTeX rendering and a structural formula editor for GPUI.'],
+	['gpui-bidi', 'Right-to-left and mixed-direction text: caret, selection, layout.'],
+	['os-spellcheck', "Spell-checking through the operating system's own checker on macOS and Windows."],
+	['os-cursors', 'Custom mouse cursors on macOS, Windows and Linux using XCursor themes.'],
+];
 ---
 
-<!doctype html>
-<html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<meta name="generator" content={Astro.generator} />
-		<title>packetThrower &mdash; tools for the people running the network</title>
-		<meta
-			name="description"
-			content="Open-source desktop tools. Zorite for local-first journaling, Baudrun for serial console sessions, PortFinder for switch port discovery, etch341 for CH341A flash programming."
-		/>
-
-		<!-- Icon pack — generated via `pnpm icons` from public/icon.svg. -->
-		<link rel="icon" type="image/svg+xml" href="/icon.svg" />
+<Layout
+	title="packetThrower — tools for the people running the network"
+	description={description}
+	favicon="/icon.svg"
+	ogImage={`${HUB}/og-image.png`}
+>
+	<Fragment slot="head">
 		<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
-		<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
 		<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 		<link rel="manifest" href="/site.webmanifest" />
-		<meta name="theme-color" content="#162237" />
+	</Fragment>
 
-		<!-- Open Graph + Twitter -->
-		<meta property="og:title" content="packetThrower" />
-		<meta
-			property="og:description"
-			content="Open-source desktop tools. Zorite for local-first journaling, Baudrun for serial console sessions, PortFinder for switch port discovery, etch341 for CH341A flash programming."
-		/>
-		<meta property="og:type" content="website" />
-		<meta property="og:url" content="https://packetthrower.github.io/" />
-		<meta property="og:image" content="https://packetthrower.github.io/og-image.png" />
-		<meta property="og:image:width" content="1200" />
-		<meta property="og:image:height" content="630" />
-		<meta name="twitter:card" content="summary_large_image" />
-		<meta name="twitter:title" content="packetThrower" />
-		<meta
-			name="twitter:description"
-			content="Open-source desktop tools for network engineers."
-		/>
-		<meta name="twitter:image" content="https://packetthrower.github.io/og-image.png" />
-	</head>
-	<body>
-		<main>
-			<section class="hero" aria-labelledby="hero-title">
-				<div class="hero-inner">
-					<img class="hero-mark" src="/icon.svg" alt="" width="120" height="120" loading="eager" decoding="sync" />
-					<h1 id="hero-title">packetThrower</h1>
-					<p class="tagline">Tools for the people running the network.</p>
+	<section class="pt-hero">
+		<div class="pt-wrap pt-hero-grid">
+			<div>
+				{newest && (
+					<a class="pt-pill" href={newest.url}><span class="pt-ver">new</span> {newest.app.name} {newest.version} is out: release notes →</a>
+				)}
+				<h1>Tools for the people <em>running the network.</em></h1>
+				<p class="pt-lede">
+					Four open-source desktop apps: a serial console, a switch-port finder, a flash programmer, and a journal to
+					write it all down. Native Rust, GPU-rendered, one download on macOS, Windows and Linux.
+				</p>
+				<div class="pt-actions">
+					<a class="pt-btn pt-btn-primary" href="#apps">Browse the apps</a>
+					<a class="pt-btn" href="#install">Install with your package manager</a>
 				</div>
-				<div class="hero-glow" aria-hidden="true"></div>
-			</section>
+			</div>
+			<div class="pt-term" aria-label="Example: installing every app with Homebrew, then running PortFinder">
+				<div class="pt-term-bar"><i></i><i></i><i></i><span>zsh — field laptop</span></div>
+				<pre><span class="t-p">$</span> brew tap packetThrower/tap
+<span class="t-p">$</span> brew trust packetThrower/tap
+<span class="t-p">$</span> brew install --cask baudrun portfinder etch341 zorite
+{APPS.map((a) => <Fragment><span class="t-ok">==&gt;</span> Installing Cask <b>{a.id}</b> <span class="t-dim">{versionOf(a) ?? ''}</span>{'\n'}</Fragment>)}<span class="t-p">$</span> portfinder --cli en7
+<span class="t-dim">listening for CDP / LLDP / MNDP…</span>
+  switch   <span class="t-if">core-sw-01</span>  <span class="t-ip">10.20.0.2</span>
+  port     <span class="t-if">GigabitEthernet1/0/24</span>
+  vlan     <span class="t-ok">120</span> <span class="t-dim">(voice 130)</span></pre>
+			</div>
+		</div>
+	</section>
 
-			<section class="projects" aria-label="Projects">
-				<div class="projects-inner">
-					{projects.map((p) => (
-						<article class="card">
-							<header class="card-header">
-								<img class="card-icon" src={p.icon} alt="" width="56" height="56" loading="eager" />
-								<div>
-									<h2 class="card-title">{p.name}</h2>
-									<p class="card-tagline">{p.tagline}</p>
+	<section id="apps" class="pt-section">
+		<div class="pt-wrap">
+			<div class="pt-head">
+				<div><div class="pt-eyebrow">The apps</div><h2>Built for the rack, the bench and the notebook.</h2></div>
+			</div>
+			{groups.map((g) => (
+				<Fragment>
+					<div class="pt-group">{g.label}</div>
+					<div class="pt-apps">
+						{g.apps.map((a) => (
+							<article class="pt-app-card">
+								<a class:list={['pt-card-shot', { contain: a.contain }]} href={a.base}>
+									<img src={`${a.base}${a.screenshot}`} alt={`${a.name} screenshot`} loading="lazy" />
+								</a>
+								<div class="pt-card-body">
+									<header>
+										<img src={iconFor(a)} alt="" width="44" height="44" />
+										<div><h3>{a.name}</h3><div class="pt-kind">{a.kind}</div></div>
+										{versionOf(a) && <span class="pt-ver">v{versionOf(a)}</span>}
+									</header>
+									<p>{a.summary}</p>
+									<div class="pt-chips">{a.chips.map((c) => <span class="pt-chip">{c}</span>)}</div>
+									<div class="pt-card-links">
+										<a href={a.base}>Overview</a>
+										<a href={`${a.base}${a.docsStart}`}>Docs</a>
+										<a href={`${GITHUB}/${a.repo}`}>GitHub ↗</a>
+									</div>
 								</div>
-							</header>
-							<p class="card-body">{p.body}</p>
-							<div class="card-actions">
-								<a class="action action-primary" href={p.docs}>
-									<span>Docs</span>
-									<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
-										<path
-											fill="none"
-											stroke="currentColor"
-											stroke-width="1.5"
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											d="M5 12h14m-6-6 6 6-6 6"
-										/>
-									</svg>
-								</a>
-								<a class="action action-secondary" href={p.repo}>
-									<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-										<path
-											fill="currentColor"
-											d="M12 2A10 10 0 0 0 2 12.13c0 4.47 2.85 8.27 6.79 9.61.5.1.68-.22.68-.49v-1.7c-2.78.62-3.36-1.35-3.36-1.35-.45-1.18-1.11-1.5-1.11-1.5-.91-.63.07-.62.07-.62 1.01.07 1.55 1.06 1.55 1.06.9 1.57 2.36 1.12 2.94.86.09-.67.35-1.13.64-1.39-2.22-.26-4.56-1.13-4.56-5.05 0-1.12.39-2.03 1.04-2.74-.1-.26-.45-1.3.1-2.7 0 0 .85-.28 2.79 1.05a9.5 9.5 0 0 1 5.08 0c1.94-1.33 2.79-1.05 2.79-1.05.55 1.4.2 2.44.1 2.7.65.71 1.04 1.62 1.04 2.74 0 3.93-2.34 4.78-4.57 5.04.36.31.68.92.68 1.86v2.76c0 .27.18.59.69.49A10 10 0 0 0 22 12.13 10 10 0 0 0 12 2Z"
-										/>
-									</svg>
-									<span>GitHub</span>
-								</a>
+							</article>
+						))}
+						{g.label === 'Notes' && (
+							<div class="pt-app-card" style="justify-content:center;padding:28px;background:var(--pt-bg-2)">
+								<div class="pt-eyebrow">Shared foundation</div>
+								<h3 style="margin:10px 0 8px;font-size:20px">One stack, four apps</h3>
+								<p style="margin:0;color:var(--pt-ink-2)">
+									Every app is Rust on GPUI and GPUI Kit, ships as a single native binary, and installs the same way: Homebrew,
+									Scoop, winget, or a <code>.deb</code>, <code>.rpm</code> or AppImage.
+								</p>
+								<div class="pt-card-links" style="margin-top:18px"><a href="#libraries">Libraries we publish →</a></div>
 							</div>
-						</article>
+						)}
+					</div>
+				</Fragment>
+			))}
+		</div>
+	</section>
+
+	<section id="install" class="pt-section pt-band">
+		<div class="pt-wrap pt-split">
+			<div>
+				<div class="pt-eyebrow">Install</div>
+				<h2>One tap, one bucket, every app.</h2>
+				<p>
+					Package managers keep the apps updated and skip the Gatekeeper and SmartScreen prompts. Each app also has a
+					pre-release channel that installs side by side with stable.
+				</p>
+				<ul class="pt-checks">
+					<li>Homebrew tap and Scoop bucket carry stable and pre-release</li>
+					<li>winget for stable releases (Baudrun, PortFinder, Zorite)</li>
+					<li>Linux: <code>.deb</code>, <code>.rpm</code>, AppImage and Arch packages on each release</li>
+				</ul>
+			</div>
+			<InstallTabs
+				id="hub"
+				panels={[
+					{
+						os: 'mac',
+						cmds: ['brew tap packetThrower/tap', 'brew trust packetThrower/tap', 'brew install --cask baudrun portfinder etch341 zorite'],
+						note: 'Pre-release: append <code>@alpha</code>, e.g. <code>baudrun@alpha</code>.',
+					},
+					{
+						os: 'win',
+						cmds: [
+							'scoop bucket add packetThrower https://github.com/packetThrower/scoop-bucket',
+							'scoop install baudrun portfinder etch341 zorite',
+							'winget install packetThrower.Baudrun',
+						],
+						note: 'Pre-release on Scoop: <code>baudrun-prerelease</code>. etch341 is not on winget.',
+					},
+					{
+						os: 'linux',
+						cmds: ['nix run github:packetThrower/zorite'],
+						note: 'Packages for every app are attached to its GitHub release, with <code>SHA256SUMS</code>. Each app\'s Install page has the details.',
+					},
+				]}
+			/>
+		</div>
+	</section>
+
+	{releases.length > 0 && (
+		<section id="releases" class="pt-section">
+			<div class="pt-wrap">
+				<div class="pt-head">
+					<div><div class="pt-eyebrow">Releases</div><h2>Latest from each app</h2></div>
+					<a class="pt-link" href={GITHUB}>All repositories on GitHub →</a>
+				</div>
+				<div class="pt-rows">
+					{releases.map((r) => (
+						<a class="pt-row" href={r.url}>
+							<img src={iconFor(r.app)} alt="" width="28" height="28" />
+							<div><b>{r.app.name} {r.version}</b> <span class="pt-muted" style="font-size:14px">— {r.summary}</span></div>
+							<time datetime={r.date}>{r.date}</time>
+						</a>
 					))}
 				</div>
-			</section>
+			</div>
+		</section>
+	)}
 
-			<footer>
-				<div class="footer-inner">
-					<a href="https://github.com/packetThrower">github.com/packetThrower</a>
-					<span class="dot" aria-hidden="true">&middot;</span>
-					<span>GPL-3.0 licensed</span>
-					<span class="dot" aria-hidden="true">&middot;</span>
-					<span>{year}</span>
+	<section id="libraries" class="pt-section pt-band">
+		<div class="pt-wrap">
+			<div class="pt-head">
+				<div>
+					<div class="pt-eyebrow">Libraries</div>
+					<h2>Crates we publish along the way</h2>
+					<p>Pieces of the apps, released on their own. Each has an overview and a full API reference.</p>
 				</div>
-			</footer>
-		</main>
-
-		<script is:inline>
-			// Theme: respect system preference; cache override in localStorage if user
-			// later flips it (no toggle in this v1, but the slot is here for later).
-			const stored = localStorage.getItem('pt-theme');
-			if (stored === 'light' || stored === 'dark') {
-				document.documentElement.dataset.theme = stored;
-			}
-		</script>
-	</body>
-</html>
-
-<style is:global>
-	/*
-	 * Palette derived from PortFinder + Baudrun icons:
-	 *   navy gradient: #2e4368 -> #162237 -> #04080e
-	 *   amber pin:     #fff2c4 -> #f0c060 -> #a87420 -> #5a3a10
-	 */
-	:root {
-		--pf-navy-900: #04080e;
-		--pf-navy-800: #0c1420;
-		--pf-navy-700: #162237;
-		--pf-navy-600: #1f3052;
-		--pf-navy-500: #2e4368;
-		--pf-navy-400: #4a608a;
-
-		--pf-amber-200: #fff2c4;
-		--pf-amber-300: #f5d68b;
-		--pf-amber-400: #f0c060;
-		--pf-amber-500: #d49b3a;
-		--pf-amber-600: #a87420;
-		--pf-amber-700: #5a3a10;
-
-		--pf-paper-50: #fafbfd;
-		--pf-paper-100: #f3f5f9;
-		--pf-paper-200: #e7eaf1;
-		--pf-paper-300: #d3d8e1;
-		--pf-paper-500: #6e7689;
-		--pf-paper-700: #2f3645;
-		--pf-paper-800: #1a2030;
-		--pf-paper-900: #0f1422;
-
-		--bg: var(--pf-paper-50);
-		--bg-alt: var(--pf-paper-100);
-		--ink: var(--pf-paper-800);
-		--ink-soft: var(--pf-paper-500);
-		--hairline: var(--pf-paper-200);
-		--accent: var(--pf-amber-600);
-		--accent-soft: var(--pf-amber-200);
-
-		color-scheme: light dark;
-	}
-
-	@media (prefers-color-scheme: dark) {
-		:root {
-			--bg: var(--pf-navy-800);
-			--bg-alt: var(--pf-navy-700);
-			--ink: var(--pf-paper-100);
-			--ink-soft: var(--pf-paper-300);
-			--hairline: var(--pf-navy-600);
-			--accent: var(--pf-amber-400);
-			--accent-soft: var(--pf-navy-700);
-		}
-	}
-
-	:root[data-theme='light'] {
-		--bg: var(--pf-paper-50);
-		--bg-alt: var(--pf-paper-100);
-		--ink: var(--pf-paper-800);
-		--ink-soft: var(--pf-paper-500);
-		--hairline: var(--pf-paper-200);
-		--accent: var(--pf-amber-600);
-		--accent-soft: var(--pf-amber-200);
-	}
-
-	:root[data-theme='dark'] {
-		--bg: var(--pf-navy-800);
-		--bg-alt: var(--pf-navy-700);
-		--ink: var(--pf-paper-100);
-		--ink-soft: var(--pf-paper-300);
-		--hairline: var(--pf-navy-600);
-		--accent: var(--pf-amber-400);
-		--accent-soft: var(--pf-navy-700);
-	}
-
-	* {
-		box-sizing: border-box;
-	}
-
-	html,
-	body {
-		margin: 0;
-		padding: 0;
-		min-height: 100%;
-	}
-
-	body {
-		font-family: 'IBM Plex Sans Variable', system-ui, sans-serif;
-		font-feature-settings: 'cv02' 1, 'cv03' 1;
-		color: var(--ink);
-		background: var(--bg);
-		line-height: 1.5;
-		-webkit-font-smoothing: antialiased;
-	}
-
-	/* Hero — drenched navy in BOTH themes (the brand register moment). */
-	.hero {
-		position: relative;
-		isolation: isolate;
-		overflow: hidden;
-		min-height: min(60vh, 540px);
-		padding: clamp(4rem, 10vw, 7rem) clamp(1.5rem, 4vw, 3rem) clamp(3rem, 7vw, 5rem);
-		display: grid;
-		place-items: center;
-		text-align: center;
-		color: var(--pf-paper-100);
-		background: radial-gradient(
-			ellipse at top,
-			var(--pf-navy-500) 0%,
-			var(--pf-navy-700) 45%,
-			var(--pf-navy-900) 100%
-		);
-	}
-
-	.hero-inner {
-		position: relative;
-		z-index: 1;
-		max-width: 42rem;
-	}
-
-	.hero-mark {
-		display: block;
-		margin: 0 auto 1.5rem;
-		border-radius: 22%; /* echoes the squircle but stays subtle */
-		filter: drop-shadow(0 18px 40px rgba(4, 8, 14, 0.55));
-	}
-
-	.hero h1 {
-		margin: 0;
-		font-family: 'Fraunces Variable', Georgia, serif;
-		font-variation-settings: 'opsz' 144, 'SOFT' 50, 'WONK' 1;
-		font-weight: 600;
-		font-size: clamp(3rem, 2rem + 5vw, 5.5rem);
-		line-height: 0.95;
-		letter-spacing: -0.025em;
-		color: var(--pf-paper-50);
-	}
-
-	.tagline {
-		margin: 1.25rem 0 0;
-		font-size: clamp(1.1rem, 1rem + 0.45vw, 1.35rem);
-		color: color-mix(in oklch, var(--pf-paper-100) 88%, transparent);
-	}
-
-	.hero-glow {
-		position: absolute;
-		inset: auto auto -25% 50%;
-		width: min(90vw, 800px);
-		aspect-ratio: 1.5;
-		transform: translateX(-50%);
-		background: radial-gradient(
-			circle,
-			color-mix(in oklch, var(--pf-amber-500) 38%, transparent) 0%,
-			transparent 60%
-		);
-		filter: blur(50px);
-		opacity: 0.5;
-		pointer-events: none;
-	}
-
-	.projects {
-		padding: clamp(3rem, 6vw, 5rem) clamp(1.5rem, 4vw, 3rem);
-	}
-
-	.projects-inner {
-		display: grid;
-		gap: 1.5rem;
-		grid-template-columns: 1fr;
-		max-width: 64rem;
-		margin: 0 auto;
-	}
-
-	@media (min-width: 48rem) {
-		.projects-inner {
-			grid-template-columns: 1fr 1fr;
-			gap: 2rem;
-		}
-	}
-
-	.card {
-		display: flex;
-		flex-direction: column;
-		gap: 1rem;
-		padding: 1.75rem;
-		border: 1px solid var(--hairline);
-		border-radius: 14px;
-		background: var(--bg-alt);
-		transition: border-color 160ms ease, transform 160ms ease;
-	}
-
-	.card:hover {
-		border-color: color-mix(in oklch, var(--accent) 50%, var(--hairline));
-		transform: translateY(-2px);
-	}
-
-	.card-header {
-		display: flex;
-		gap: 1rem;
-		align-items: flex-start;
-	}
-
-	.card-icon {
-		flex: 0 0 auto;
-		border-radius: 12px;
-		filter: drop-shadow(0 6px 16px rgba(4, 8, 14, 0.18));
-	}
-
-	.card-title {
-		margin: 0;
-		font-family: 'Fraunces Variable', Georgia, serif;
-		font-weight: 600;
-		font-size: 1.65rem;
-		line-height: 1;
-		letter-spacing: -0.015em;
-	}
-
-	.card-tagline {
-		margin: 0.35rem 0 0;
-		color: var(--ink-soft);
-		font-size: 0.98rem;
-	}
-
-	.card-body {
-		margin: 0;
-		color: var(--ink);
-		font-size: 0.96rem;
-		line-height: 1.55;
-	}
-
-	.card-actions {
-		display: flex;
-		gap: 0.6rem;
-		margin-top: auto;
-		flex-wrap: wrap;
-	}
-
-	.action {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.4em;
-		padding: 0.55em 1.1em;
-		border-radius: 999px;
-		text-decoration: none;
-		font-weight: 500;
-		font-size: 0.92rem;
-		letter-spacing: 0.005em;
-		transition: background 140ms ease, color 140ms ease, transform 140ms ease;
-	}
-
-	.action-primary {
-		background: var(--accent);
-		color: var(--pf-navy-900);
-	}
-
-	.action-primary:hover {
-		background: var(--pf-amber-300);
-		transform: translateY(-1px);
-	}
-
-	.action-secondary {
-		background: transparent;
-		color: var(--ink);
-		box-shadow: inset 0 0 0 1px var(--hairline);
-	}
-
-	.action-secondary:hover {
-		box-shadow: inset 0 0 0 1px var(--ink-soft);
-	}
-
-	footer {
-		padding: 2rem 1.5rem 3rem;
-		border-top: 1px solid var(--hairline);
-		text-align: center;
-	}
-
-	.footer-inner {
-		display: inline-flex;
-		gap: 0.6rem;
-		flex-wrap: wrap;
-		justify-content: center;
-		align-items: center;
-		font-size: 0.9rem;
-		color: var(--ink-soft);
-	}
-
-	.footer-inner a {
-		color: var(--accent);
-		text-decoration: none;
-		text-decoration-color: color-mix(in oklch, currentColor 35%, transparent);
-		text-underline-offset: 0.2em;
-	}
-
-	.footer-inner a:hover {
-		text-decoration: underline;
-		text-decoration-color: currentColor;
-	}
-
-	.dot {
-		opacity: 0.5;
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		*,
-		*::before,
-		*::after {
-			animation-duration: 0.01ms !important;
-			transition-duration: 0.01ms !important;
-		}
-	}
-</style>
+			</div>
+			<div class="pt-libs">
+				{crates.map(([name, text]) => (
+					<a class="pt-lib" href={`/zorite/reference/crates/${name}/`}><em>Rust</em><strong>{name}</strong><span>{text}</span></a>
+				))}
+				<a class="pt-lib" href={`${GITHUB}/usbserial-go`}><em>Go</em><strong>usbserial-go</strong><span>USB-to-serial adapters over libusb, speaking each chipset's own protocol.</span></a>
+			</div>
+		</div>
+	</section>
+</Layout>

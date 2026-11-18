@@ -13,10 +13,11 @@
     "icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
-    "@astrojs/sitemap": "^3.7.4",
-    "@fontsource-variable/fraunces": "^5.3.0",
+    "@astrojs/sitemap": "^3.7.5",
     "@fontsource-variable/ibm-plex-sans": "^5.3.0",
-    "astro": "^7.4.2"
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@packetthrower/site-theme": "github:packetThrower/site-theme#v0.1.2",
+    "astro": "^7.4.12"
   },
   "devDependencies": {
     "sharp": "^0.35.5"
